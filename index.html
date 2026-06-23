@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>花小猪运营数据综合看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 顶部导航 */
+        .header {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(108, 92, 231, 0.1));
+            border-radius: 16px;
+            padding: 25px 30px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #ff6b9d, #e056fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header-info {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Tab导航 */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .tab-btn {
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 107, 157, 0.1);
+            color: #ff6b9d;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #ff6b9d, #e056fd);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* 内容区域 */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 卡片 */
+        .card {
+            background: rgba(30, 30, 40, 0.6);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 关键指标卡片 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .metric-card {
+            background: rgba(20, 20, 30, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 107, 157, 0.1);
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b9d, #e056fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .metric-change {
+            margin-top: 10px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .metric-change.up { color: #34d399; }
+        .metric-change.down { color: #f87171; }
+
+        /* 图表区域 */
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+        }
+
+        .chart-box {
+            background: rgba(20, 20, 30, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chart-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 平台卡片 */
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .platform-card {
+            background: rgba(20, 20, 30, 0.8);
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .platform-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .platform-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .platform-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .platform-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .metric-row .label { color: rgba(255, 255, 255, 0.5); }
+        .metric-row .value { color: #a5b4fc; font-weight: 600; }
+
+        /* 数据表格 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table th {
+            background: rgba(255, 107, 157, 0.1);
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-xiaohongshu { background: rgba(255, 71, 87, 0.2); color: #ff4757; }
+        .badge-douyin { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
+        .badge-wechat { background: rgba(37, 211, 102, 0.2); color: #34d399; }
+        .badge-video { background: rgba(255, 78, 78, 0.2); color: #ff6b6b; }
+        .badge-life { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .badge-weibo { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+        .badge-kuaishou { background: rgba(255, 170, 0, 0.2); color: #ffaa00; }
+
+        /* 更新时间 */
+        .update-time {
+            text-align: right;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 20px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+            .metrics-grid {
+        }
+        @media (max-width: 480px) {
+            .insight-grid {
+                grid-template-columns: 1fr;
+            }
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        /* 左侧目录栏样式 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            border-right: 1px solid rgba(255, 107, 157, 0.2);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+        .sidebar.collapsed {
+            transform: translateX(-220px);
+        }
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 107, 157, 0.1);
+        }
+        .sidebar-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #ff6b9d;
+        }
+        .sidebar-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #ff6b9d;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .sidebar-toggle:hover {
+            background: rgba(255, 107, 157, 0.3);
+        }
+        .sidebar-content {
+            padding: 15px 0;
+        }
+        .nav-section {
+            margin-bottom: 5px;
+        }
+        .ugc-section {
+            position: relative;
+            margin-top: 108px;
+        }
+        .sidebar-mascot {
+            position: absolute;
+            z-index: 1;
+            top: -108px;
+            left: 50%;
+            width: 126px;
+            aspect-ratio: 1080 / 820;
+            overflow: hidden;
+            transform: translateX(-50%);
+            pointer-events: none;
+            filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.24));
+        }
+        .sidebar-mascot img {
+            position: absolute;
+            top: -25%;
+            left: -7.9%;
+            width: 116.5%;
+            height: auto;
+        }
+        .nav-section-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .nav-section-header:hover {
+            background: rgba(255, 107, 157, 0.1);
+            border-left-color: #ff6b9d;
+        }
+        .nav-icon {
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .nav-text {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .nav-arrow {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            transition: transform 0.3s;
+        }
+        .nav-arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+        .nav-items {
+            max-height: 200px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .nav-items.collapsed {
+            max-height: 0;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px 10px 45px;
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover {
+            background: rgba(224, 86, 253, 0.15);
+            color: #e056fd;
+            border-left-color: #e056fd;
+        }
+        .nav-item.active {
+            background: rgba(255, 107, 157, 0.2);
+            color: #ff6b9d;
+            border-left-color: #ff6b9d;
+        }
+        .item-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+        .nav-item:hover .item-dot {
+            background: #e056fd;
+        }
+        
+        /* 主内容区域 */
+        .main-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+        .main-content.expanded {
+            margin-left: 40px;
+        }
+        
+        /* 滚动条样式 */
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 107, 157, 0.3);
+
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左侧目录栏 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">目录</span>
+            <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+        </div>
+        <div class="sidebar-content">
+            <!-- UGC数据分析 -->
+            <div class="nav-section ugc-section">
+                <span class="sidebar-mascot" aria-hidden="true"><img src="assets/sidebar-mascot-clean.gif" alt=""></span>
+                <div class="nav-section-header" onclick="toggleSection('ugc-nav')">
+                    <span class="nav-text">UGC数据分析</span>
+                    <span class="nav-arrow" id="ugc-nav-arrow">▼</span>
+                </div>
+                <div class="nav-items" id="ugc-nav">
+                    <a href="#ugc-metrics" class="nav-item" onclick="navigateTo('ugc-metrics', 'ugc')">
+                        <span class="item-dot"></span>
+                        关键指标总览
+                    </a>
+                    <a href="#ugc-comparison" class="nav-item" onclick="navigateTo('ugc-comparison', 'ugc')">
+                        <span class="item-dot"></span>
+                        月度对比分析
+                    </a>
+                    <a href="#ugc-daily" class="nav-item" onclick="navigateTo('ugc-daily', 'ugc')">
+                        <span class="item-dot"></span>
+                        每日UGC趋势
+                    </a>
+                    <a href="#ugc-activity" class="nav-item" onclick="navigateTo('ugc-activity', 'ugc')">
+                        <span class="item-dot"></span>
+                        活动UGC排行
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 自媒体运营分析 -->
+            <div class="nav-section">
+                <div class="nav-section-header" onclick="toggleSection('media-nav')">
+                    <span class="nav-text">自媒体运营分析</span>
+                    <span class="nav-arrow" id="media-nav-arrow">▼</span>
+                </div>
+                <div class="nav-items" id="media-nav">
+                    <a href="#media-overview" class="nav-item" onclick="navigateTo('media-overview', 'media')">
+                        <span class="item-dot"></span>
+                        全平台数据总览
+                    </a>
+                    <a href="#media-exposure" class="nav-item" onclick="navigateTo('media-exposure', 'media')">
+                        <span class="item-dot"></span>
+                        月度曝光趋势
+                    </a>
+                    <a href="#media-weekly" class="nav-item" onclick="navigateTo('media-weekly', 'media')">
+                        <span class="item-dot"></span>
+                        周度数据统计
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 数据洞察 -->
+            <div class="nav-section">
+                <div class="nav-section-header" onclick="toggleSection('insights-nav')">
+                    <span class="nav-text">数据洞察与建议</span>
+                    <span class="nav-arrow" id="insights-nav-arrow">▼</span>
+                </div>
+                <div class="nav-items" id="insights-nav">
+                    <a href="#insights" class="nav-item" onclick="scrollToElement('insights')">
+                        <span class="item-dot"></span>
+                        洞察建议
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主内容区域 -->
+    <div class="main-content" id="mainContent">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>花小猪新媒体运营数据看板</h1>
+            <div class="header-info">
+                📅 统计周期：2026年6月 | 🔄 更新时间：<span id="updateTime"></span> | 📱 数据来源：Cooper协同表格
+            </div>
+        </div>
+
+        <!-- Tab导航 -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('ugc')">📈 UGC数据分析</button>
+            <button class="tab-btn" onclick="switchTab('media')">📱 自媒体运营数据</button>
+        </div>
+
+        <!-- UGC数据分析 -->
+        <div id="tab-ugc" class="tab-content active">
+            <!-- 关键指标 -->
+            <div class="card">
+                <div class="card-title" id="ugc-metrics">📊 关键指标总览</div>
+                <div class="metrics-grid" id="ugcMetrics"></div>
+            </div>
+
+            <!-- PR统计 -->
+            <div class="card">
+                <div class="card-title" id="pr-metrics">📋 2026年统计数据</div>
+                <div class="metrics-grid pr-metrics-grid" id="prMetrics"></div>
+            </div>
+
+            <!-- 月度对比 -->
+            <div class="card">
+                <div class="card-title" id="ugc-comparison">📈 月度对比分析</div>
+                <div class="metrics-grid" id="monthlyComparison" style="grid-template-columns: repeat(4, 1fr);"></div>
+            </div>
+
+            <!-- 每日趋势 -->
+            <div class="card">
+                <div class="card-title" id="ugc-daily">📉 每日UGC趋势</div>
+                <div class="chart-row">
+                    <div class="chart-box">
+                        <div class="chart-title">每日UGC数量</div>
+                        <div id="dailyChart" style="height: 350px;"></div>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-title">平台分布</div>
+                        <div id="platformPieChart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 活动数据 -->
+            <div class="card">
+                <div class="card-title" id="ugc-activity">🎯 活动UGC排行</div>
+                <div id="activityTable"></div>
+            </div>
+
+            <div class="update-time">数据来源：6月ugc日报看板 & 2026年UGC活动数量统计</div>
+        </div>
+
+        <!-- 自媒体运营数据 -->
+        <div id="tab-media" class="tab-content">
+            <!-- 平台概览 -->
+            <div class="card">
+                <div class="card-title" id="media-overview">📱 全平台数据总览</div>
+                <div class="platform-grid" id="platformOverview"></div>
+            </div>
+
+            <!-- 曝光趋势 -->
+            <div class="card">
+                <div class="card-title" id="media-exposure">📊 月度曝光趋势</div>
+                <div class="chart-row">
+                    <div class="chart-box">
+                        <div class="chart-title">各平台曝光量对比</div>
+                        <div id="exposureChart" style="height: 350px;"></div>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-title">粉丝增长趋势</div>
+                        <div id="fansChart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 周度数据 -->
+            <div class="card">
+                <div class="card-title" id="media-weekly">📅 周度数据统计</div>
+                <div id="weeklyStats"></div>
+            </div>
+
+            <div class="update-time">数据来源：2026自媒体数据看板</div>
+        </div>
+    <!-- 数据洞察与建议 -->
+    <div class="insights-section">
+        <div class="container">
+            <div class="card">
+                <div class="card-title" id="insights">💡 数据洞察与建议</div>
+                <div id="insightsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .insights-section {
+            margin-top: 30px;
+            padding-bottom: 30px;
+        }
+        .insights-section .card {
+            background: rgba(20, 20, 30, 0.8);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        /* 响应式布局 */
+        @media (max-width: 900px) {
+            .insight-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            .insight-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+
+        /* 活动详情样式 */
+        .detail-btn {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.3), rgba(224, 86, 253, 0.3));
+            border: 1px solid rgba(255, 107, 157, 0.5);
+            color: #ff6b9d;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .detail-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.5), rgba(224, 86, 253, 0.5));
+            transform: scale(1.1);
+        }
+        .activity-detail {
+            margin-top: 20px;
+        }
+        .detail-card {
+            background: linear-gradient(135deg, rgba(30, 30, 50, 0.95), rgba(20, 20, 40, 0.95));
+            border: 1px solid rgba(255, 107, 157, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .detail-header h3 {
+            color: #ff6b9d;
+            font-size: 16px;
+            margin: 0;
+        }
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .close-btn:hover {
+            background: rgba(248, 113, 113, 0.3);
+            color: #f87171;
+        }
+        .detail-content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        .detail-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+        }
+        .detail-value {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .detail-value.highlight {
+            color: #e056fd;
+            font-weight: 600;
+        }
+        .detail-value.note {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            font-style: italic;
+        }
+        .detail-divider {
+            grid-column: span 2;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 5px 0;
+        }
+        .insight-card {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(224, 86, 253, 0.1));
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 107, 157, 0.2);
+        }
+        .insight-icon {
+            font-size: 24px;
+            margin-bottom: 12px;
+        }
+        .insight-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #ff6b9d;
+            margin-bottom: 10px;
+        }
+        .insight-content {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+        .insight-highlight {
+            color: #e056fd;
+            font-weight: 600;
+        }
+        .recommendation-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+        }
+        .recommendation-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .recommendation-list li:last-child {
+            border-bottom: none;
+        }
+        .recommendation-list li::before {
+            content: "→ ";
+            color: #ff6b9d;
+        }
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .trend-up {
+            background: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+        }
+        .trend-down {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+        .trend-stable {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        /* ===== Visual refresh: calmer, clearer dashboard hierarchy ===== */
+        :root {
+            --bg: #0d1524;
+            --bg-deep: #080e19;
+            --surface: rgba(20, 31, 49, 0.78);
+            --surface-strong: rgba(26, 40, 62, 0.92);
+            --line: rgba(181, 199, 230, 0.12);
+            --text: #edf3ff;
+            --muted: #94a3ba;
+            --pink: #ff7597;
+            --mint: #4ed6ad;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at 86% -5%, rgba(169, 139, 255, 0.18), transparent 28rem),
+                radial-gradient(circle at 24% 0%, rgba(255, 117, 151, 0.13), transparent 26rem),
+                linear-gradient(145deg, var(--bg-deep) 0%, var(--bg) 55%, #111d32 100%);
+            color: var(--text);
+            letter-spacing: 0.01em;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.22;
+            background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 36px 36px;
+            mask-image: linear-gradient(to bottom, black, transparent 72%);
+        }
+
+        .sidebar {
+            width: 252px;
+            background: linear-gradient(180deg, rgba(15, 24, 40, 0.98), rgba(10, 17, 30, 0.98));
+            border-right-color: var(--line);
+            box-shadow: 18px 0 42px rgba(0, 0, 0, 0.16);
+        }
+        .sidebar-header {
+            padding: 22px 20px;
+            background: linear-gradient(135deg, rgba(255, 117, 151, 0.16), rgba(169, 139, 255, 0.1));
+            border-bottom-color: var(--line);
+        }
+        .sidebar-title { color: #ffd3df; letter-spacing: 0.04em; }
+        .sidebar-toggle {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffd3df;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9px;
+        }
+        .sidebar-toggle:hover { background: rgba(255, 117, 151, 0.2); }
+        .nav-section { margin: 7px 10px; }
+        .ugc-section { margin-top: 108px; }
+        .nav-section-header {
+            padding: 11px 10px;
+            border-left: 0;
+            border-radius: 9px;
+        }
+        .nav-section-header:hover { background: rgba(255, 255, 255, 0.055); border-left-color: transparent; }
+        .nav-text { color: #cbd6e8; font-size: 13px; }
+        .nav-item {
+            margin: 2px 0;
+            padding: 9px 10px 9px 35px;
+            border-left: 0;
+            border-radius: 8px;
+            color: #8f9fb7;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: linear-gradient(90deg, rgba(255, 117, 151, 0.18), rgba(169, 139, 255, 0.07));
+            color: #ffe0e8;
+            border-left-color: transparent;
+        }
+        .nav-item.active .item-dot, .nav-item:hover .item-dot { background: var(--pink); box-shadow: 0 0 0 4px rgba(255, 117, 151, 0.13); }
+        .sidebar.collapsed { transform: translateX(-212px); }
+        .sidebar.collapsed .sidebar-mascot { opacity: 0; }
+
+        .main-content {
+            margin-left: 252px;
+            padding: 28px 34px 44px;
+        }
+        .main-content.expanded { margin-left: 40px; }
+        .container { max-width: 1700px; padding: 0; }
+
+        .header {
+            position: relative;
+            overflow: hidden;
+            padding: 30px 32px;
+            margin-bottom: 20px;
+            background: linear-gradient(120deg, rgba(36, 50, 75, 0.88), rgba(25, 38, 62, 0.76));
+            border-color: var(--line);
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.16);
+        }
+        .header::after {
+            content: "";
+            position: absolute;
+            width: 230px;
+            height: 230px;
+            border-radius: 50%;
+            right: -72px;
+            top: -132px;
+            background: radial-gradient(circle, rgba(255, 117, 151, 0.28), transparent 68%);
+            pointer-events: none;
+        }
+        .header h1 {
+            position: relative;
+            font-size: clamp(24px, 2.5vw, 32px);
+            letter-spacing: 0.02em;
+            background: linear-gradient(100deg, #fff5f8, #ffc4d4 45%, #c9b8ff);
+            -webkit-background-clip: text;
+        }
+        .header-info { color: #aebbd0; line-height: 1.7; }
+
+        .tabs { gap: 9px; margin-bottom: 20px; }
+        .tab-btn {
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.055);
+            border-color: var(--line);
+            color: #aebbd0;
+            font-size: 14px;
+        }
+        .tab-btn:hover { background: rgba(255, 117, 151, 0.12); color: #ffd4df; }
+        .tab-btn.active {
+            background: linear-gradient(115deg, #e95d88, #9f7bf0);
+            box-shadow: 0 8px 20px rgba(207, 97, 159, 0.22);
+        }
+
+        .card, .insights-section .card {
+            padding: 24px;
+            margin-bottom: 20px;
+            background: linear-gradient(145deg, rgba(30, 44, 68, 0.86), rgba(19, 30, 49, 0.84));
+            border-color: var(--line);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+        }
+        .card-title {
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--line);
+            font-size: 17px;
+            color: #f2f6ff;
+        }
+        .pr-metrics-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .metric-card {
+            position: relative;
+            overflow: hidden;
+            padding: 20px 16px;
+            text-align: left;
+            background: rgba(8, 16, 31, 0.36);
+            border-color: rgba(189, 206, 237, 0.1);
+        }
+        .metric-card::before {
+            content: "";
+            position: absolute;
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            right: -25px;
+            top: -34px;
+            background: rgba(255, 117, 151, 0.12);
+        }
+        .metric-card:hover { transform: translateY(-4px); border-color: rgba(255, 154, 179, 0.34); box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16); }
+        .metric-value { font-size: clamp(27px, 2.2vw, 34px); background: linear-gradient(120deg, #fff, #ffb2c5 50%, #c5b3ff); -webkit-background-clip: text; }
+        .metric-label { color: #a9b7cd; }
+        .metric-change { color: #8797b0; }
+        .metric-change.up { color: var(--mint); }
+        .manual-data-label { color: #34d399; }
+        .progress-track {
+            height: 7px;
+            margin-top: 14px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.09);
+        }
+        .progress-bar {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #ff6b9d, #e056fd);
+            box-shadow: 0 0 14px rgba(255, 107, 157, 0.45);
+            transition: width 0.5s ease;
+        }
+
+        .chart-row { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; }
+        .chart-box, .platform-card {
+            background: rgba(8, 16, 31, 0.34);
+            border-color: rgba(189, 206, 237, 0.1);
+        }
+        .chart-box { padding: 18px; }
+        .chart-title { color: #cbd7ea; }
+        .platform-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-rows: repeat(2, auto);
+            grid-auto-flow: row;
+            gap: 14px;
+        }
+        .platform-card--0 { grid-area: 1 / 1 / 2 / 2; }
+        .platform-card--1 { grid-area: 1 / 2 / 2 / 3; }
+        .platform-card--2 { grid-area: 1 / 3 / 2 / 4; }
+        .platform-card--3 { grid-area: 2 / 1 / 3 / 2; }
+        .platform-card--4 { grid-area: 2 / 2 / 3 / 3; }
+        .platform-card--5 { grid-area: 2 / 3 / 3 / 4; }
+        .platform-card--6 { grid-area: 2 / 4 / 3 / 5; }
+        .platform-card:hover { border-color: rgba(169, 139, 255, 0.42); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16); }
+        .metric-row .label { color: #8e9eb5; }
+        .metric-row .value { color: #c4b5fd; }
+
+        .data-table { overflow: hidden; border-radius: 10px; border: 1px solid var(--line); }
+        .data-table th, .data-table td { padding: 13px 16px; border-bottom-color: var(--line); }
+        .data-table th { background: rgba(255, 117, 151, 0.11); color: #e6edf9; }
+        .data-table tr:hover { background: rgba(255, 255, 255, 0.045); }
+
+        .insights-section { margin-top: 0; padding-bottom: 0; }
+        .insights-section .card { margin-bottom: 0; }
+        .insight-grid { gap: 14px; }
+
+        /* 活动详情样式 */
+        .activity-detail {
+            margin-top: 20px;
+        }
+        .detail-card {
+            background: linear-gradient(135deg, rgba(30, 30, 50, 0.95), rgba(20, 20, 40, 0.95));
+            border: 1px solid rgba(255, 107, 157, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .detail-header h3 {
+            color: #ff6b9d;
+            font-size: 16px;
+            margin: 0;
+        }
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .close-btn:hover {
+            background: rgba(248, 113, 113, 0.3);
+            color: #f87171;
+        }
+        .detail-content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        .detail-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+        }
+        .detail-value {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .detail-value.highlight {
+            color: #e056fd;
+            font-weight: 600;
+        }
+        .detail-value.note {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            font-style: italic;
+        }
+        .detail-divider {
+            grid-column: span 2;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 5px 0;
+        }
+        .insight-card {
+            background: linear-gradient(145deg, rgba(255, 117, 151, 0.1), rgba(169, 139, 255, 0.07));
+            border-color: rgba(255, 166, 187, 0.19);
+        }
+        .insight-title, .insight-highlight { color: #ffb3c7; }
+        .insight-content, .recommendation-list li { color: #b3c0d3; }
+        .update-time { color: #7788a1; margin-top: 14px; }
+
+        @media (max-width: 1180px) {
+            .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .pr-metrics-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 900px) {
+            .sidebar { width: 224px; }
+            .main-content { margin-left: 224px; padding: 22px; }
+            .main-content.expanded { margin-left: 40px; }
+            .platform-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; grid-auto-flow: row; }
+            .platform-card { grid-area: auto; }
+        }
+        @media (max-width: 680px) {
+            .sidebar { transform: translateX(-184px); }
+            .sidebar.collapsed { transform: translateX(-184px); }
+            .main-content, .main-content.expanded { margin-left: 40px; padding: 16px; }
+            .header { padding: 24px 20px; }
+            .card, .insights-section .card { padding: 18px; }
+            .metrics-grid, .chart-row, .platform-grid { grid-template-columns: 1fr; }
+            .platform-grid { grid-template-rows: none; grid-auto-flow: row; }
+            .pr-metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .tabs { overflow-x: auto; padding-bottom: 2px; }
+            .tab-btn { white-space: nowrap; }
+            .data-table { display: block; overflow-x: auto; white-space: nowrap; }
+            .ugc-section { margin-top: 92px; }
+            .sidebar-mascot { width: 104px; top: -88px; }
+        }
+    </style>
+
+    </div><!-- end main-content -->
+
+    <script>
+        // 更新时间
+        document.getElementById('updateTime').textContent = new Date().toLocaleString('zh-CN');
+
+        // ==================== 目录导航功能 ====================
+        
+        // 切换目录栏展开/折叠
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+        
+        // 切换目录分类展开/折叠
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const arrow = document.getElementById(sectionId + '-arrow');
+            if (section && arrow) {
+                section.classList.toggle('collapsed');
+                arrow.classList.toggle('collapsed');
+            }
+        }
+        
+        // 导航到指定区块（同时切换tab）
+        function navigateTo(elementId, tabName) {
+            // 先切换到对应的tab
+            if (tabName) {
+                switchTab(tabName);
+            }
+            // 延迟滚动以确保tab切换完成
+            setTimeout(function() {
+                scrollToElement(elementId);
+            }, 150);
+        }
+        
+        // 滚动到指定元素
+        function scrollToElement(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                // 高亮当前选中的导航项
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                event.target.closest('.nav-item')?.classList.add('active');
+                
+                // 滚动到元素位置
+                const headerOffset = 80;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+        
+        // 监听滚动更新导航高亮
+        function updateNavHighlight() {
+            const sections = ['ugc-metrics', 'ugc-comparison', 'ugc-daily', 'ugc-activity', 
+                            'media-overview', 'media-exposure', 'media-weekly', 'insights'];
+            let currentSection = '';
+            
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    const rect = section.getBoundingClientRect();
+                    if (rect.top <= 100 && rect.bottom >= 100) {
+                        currentSection = sectionId;
+                    }
+                }
+            });
+            
+            if (currentSection) {
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.getAttribute('href') === '#' + currentSection) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+        }
+        
+        // 添加滚动监听
+        window.addEventListener('scroll', updateNavHighlight);
+
+        // Tab切换
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+            
+            // 切换到自媒体Tab时重新渲染图表
+            if (tab === 'media') {
+                setTimeout(function() {
+                    renderExposureChart();
+                    renderFansChart();
+                    setTimeout(function() {
+                        const expChart = echarts.getInstanceByDom(document.getElementById('exposureChart'));
+                        const fansChart = echarts.getInstanceByDom(document.getElementById('fansChart'));
+                        if (expChart) expChart.resize();
+                        if (fansChart) fansChart.resize();
+                    }, 200);
+                }, 200);
+            }
+        }
+
+        // ==================== UGC数据 ====================
+        const dailyData = [
+            { date: '6.1', xiaohongshu: 1, douyin: 33, total: 34 },
+            { date: '6.2', xiaohongshu: 4, douyin: 40, total: 44 },
+            { date: '6.3', xiaohongshu: 10, douyin: 27, total: 37 },
+            { date: '6.4', xiaohongshu: 5, douyin: 23, total: 28 },
+            { date: '6.5', xiaohongshu: 5, douyin: 16, total: 21 },
+            { date: '6.6', xiaohongshu: 1, douyin: 17, total: 18 },
+            { date: '6.7', xiaohongshu: 3, douyin: 11, total: 14 },
+            { date: '6.8', xiaohongshu: 4, douyin: 15, total: 19 },
+            { date: '6.9', xiaohongshu: 10, douyin: 89, total: 99 },
+            { date: '6.10', xiaohongshu: 6, douyin: 79, total: 85 },
+            { date: '6.11', xiaohongshu: 1, douyin: 105, total: 106 },
+            { date: '6.12', xiaohongshu: 2, douyin: 109, total: 111 },
+            { date: '6.13', xiaohongshu: 1, douyin: 40, total: 41 },
+            { date: '6.14', xiaohongshu: 8, douyin: 42, total: 50 },
+            { date: '6.15', xiaohongshu: 8, douyin: 53, total: 61 },
+            { date: '6.16', xiaohongshu: 8, douyin: 41, total: 49 },
+            { date: '6.17', xiaohongshu: 12, douyin: 55, total: 67 },
+            { date: '6.18', xiaohongshu: 6, douyin: 23, total: 29 },
+            { date: '6.19', xiaohongshu: 2, douyin: 66, total: 68 },
+            { date: '6.20', xiaohongshu: 0, douyin: 64, total: 64 },
+            { date: '6.21', xiaohongshu: 3, douyin: 44, total: 47 },
+            { date: '6.22', xiaohongshu: 4, douyin: 9, total: 13 }
+        ];
+
+        const activities = [
+            { name: "花小猪递铲子", xiaohongshu: 243, douyin: 9, total: 252 },
+            { name: "花小猪高考第一站", xiaohongshu: 0, douyin: 197, total: 197 },
+            { name: "花小猪宝藏司机", xiaohongshu: 0, douyin: 191, total: 191 },
+            { name: "花小猪父亲节", xiaohongshu: 0, douyin: 187, total: 187 },
+            { name: "花式一字马", xiaohongshu: 163, douyin: 22, total: 185 },
+            { name: "花小猪书单活动", xiaohongshu: 110, douyin: 1, total: 111 },
+            { name: "花小猪端午节", xiaohongshu: 0, douyin: 82, total: 82 },
+            { name: "花小猪拼图碎片", xiaohongshu: 0, douyin: 81, total: 81 },
+            { name: "花小猪星推官第二期", xiaohongshu: 0, douyin: 63, total: 63 },
+            { name: "花小猪520表白", xiaohongshu: 0, douyin: 51, total: 51 },
+            { name: "花小猪逛上海", xiaohongshu: 31, douyin: 17, total: 48 },
+            { name: "花小猪星推官", xiaohongshu: 0, douyin: 23, total: 23 },
+            { name: "晒周边得好礼", xiaohongshu: 18, douyin: 0, total: 18 },
+            { name: "花小猪 × 李鑫一", xiaohongshu: 16, douyin: 0, total: 16 },
+            { name: "花小猪母亲节活动", xiaohongshu: 12, douyin: 0, total: 12 },
+            { name: "花小猪京东免单cp", xiaohongshu: 12, douyin: 0, total: 12 },
+            { name: "花小猪拼豆活动", xiaohongshu: 7, douyin: 0, total: 7 },
+            { name: "花小猪好体验", xiaohongshu: 1, douyin: 0, total: 1 }
+        ];
+
+
+        // 活动曝光数据（来自2026自媒体数据看板）
+        const activityExposure = {
+            "花小猪高考第一站": { exposure: null, note: "对应文档中的'高考'" },
+            "花小猪星推官第二期": { exposure: null, note: "对应文档中的'明星省钱卡第二期'" },
+            "花小猪宝藏司机": { exposure: null, note: "对应文档中的'宝藏司机'" },
+            "花小猪星推官": { exposure: null, note: "对应文档中的'星推官吴添豪'" },
+            "花小猪520表白": { exposure: null, note: "对应文档中的'520以爱为伴'" },
+            "花小猪拼图碎片": { exposure: null, note: "对应文档中的'神秘小说碎片'" },
+            "花小猪书单活动": { exposure: null, note: "对应文档中的'书单'" }
+        };
+        // 计算总计
+        const totalXhs = dailyData.reduce((sum, d) => sum + d.xiaohongshu, 0);
+        const totalDy = dailyData.reduce((sum, d) => sum + d.douyin, 0);
+        const totalDaily = dailyData.reduce((sum, d) => sum + d.total, 0);
+        const activityXhs = activities.reduce((sum, a) => sum + a.xiaohongshu, 0);
+        const activityDy = activities.reduce((sum, a) => sum + a.douyin, 0);
+        const totalActivity = activities.reduce((sum, a) => sum + a.total, 0);
+        const weeklyUgc = dailyData
+            .filter(d => {
+                const day = Number(d.date.split('.')[1]);
+                return day >= 15 && day <= 21;
+            })
+            .reduce((sum, d) => sum + d.total, 0);
+        const annualStatsData = [
+            { month: '1月', pr: 2249, manual: 0 },
+            { month: '2月', pr: 1372, manual: 0 },
+            { month: '3月', pr: 1207, manual: 0 },
+            { month: '4月', pr: 2208, manual: 348 },
+            { month: '5月', pr: 4506, manual: 791 },
+            { month: '6月', pr: null, manual: 1221, note: '截至6.23' }
+        ];
+
+        // 渲染UGC指标
+        function renderUGCMetrics() {
+            const container = document.getElementById('ugcMetrics');
+            
+            // 计算本周UGC（最近7天）
+            const weeklyUgc = dailyData.slice(-7).reduce((sum, d) => sum + d.total, 0);
+            const weekStart = dailyData.length >= 7 ? dailyData[dailyData.length - 7].date : dailyData[0].date;
+            const weekEnd = dailyData[dailyData.length - 1].date;
+            
+            container.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-value">2,360</div>
+                    <div class="metric-label">2026年UGC手扒总计</div>
+                    <div class="metric-change up">全年累计</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">11,542</div>
+                    <div class="metric-label">2026年UGC PR总计</div>
+                    <div class="metric-change up">全年累计</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${weeklyUgc.toLocaleString()}</div>
+                    <div class="metric-label">本周UGC总计</div>
+                    <div class="metric-change up">统计周期：${weekStart}-${weekEnd}</div>
+                </div>
+            `;
+        }
+
+        function renderPrMetrics() {
+            const container = document.getElementById('prMetrics');
+            container.innerHTML = annualStatsData.map(data => `
+                <div class="metric-card">
+                    <div class="metric-value">${data.pr === null ? '—' : data.pr.toLocaleString()}</div>
+                    <div class="metric-label">${data.month} PR统计</div>
+                    <div class="metric-change"><span class="manual-data-label">手扒数据</span>：${data.manual.toLocaleString()}${data.note ? `（${data.note}）` : ''}</div>
+                </div>
+            `).join('');
+        }
+
+        // 渲染月度对比
+        function renderMonthlyComparison() {
+            const container = document.getElementById('monthlyComparison');
+            const lastMonth = 791;
+            const change = ((totalDaily - lastMonth) / lastMonth * 100).toFixed(1);
+            const changeClass = totalDaily >= lastMonth ? 'up' : 'down';
+            
+            container.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-value">${lastMonth}</div>
+                    <div class="metric-label">上月日常UGC</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${totalDaily}</div>
+                    <div class="metric-label">本月日常UGC</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${change > 0 ? '+' : ''}${change}%</div>
+                    <div class="metric-label">月度变化</div>
+                    <div class="metric-change ${changeClass}">${totalDaily >= lastMonth ? '↑ 上涨' : '↓ 下降'}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${((totalDaily / 900) * 100).toFixed(1)}%</div>
+                    <div class="metric-label">目标完成率</div>
+                    <div class="metric-change">目标: 900篇</div>
+                    <div class="progress-track" role="progressbar" aria-label="目标完成率" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min((totalDaily / 900) * 100, 100).toFixed(1)}">
+                        <div class="progress-bar" style="width: ${Math.min((totalDaily / 900) * 100, 100)}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 渲染每日趋势图
+        function renderDailyChart() {
+            const chart = echarts.init(document.getElementById('dailyChart'));
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis', backgroundColor: 'rgba(30, 30, 40, 0.9)', borderColor: '#ff6b9d' },
+                legend: { data: ['小红书', '抖音'], bottom: 0, textStyle: { color: 'rgba(255, 255, 255, 0.6)' } },
+                grid: { left: '3%', right: '4%', bottom: '15%', top: '5%', containLabel: true },
+                xAxis: { type: 'category', data: dailyData.map(d => d.date), axisLabel: { color: 'rgba(255, 255, 255, 0.6)' } },
+                yAxis: { type: 'value', axisLabel: { color: 'rgba(255, 255, 255, 0.6)' } },
+                series: [
+                    { name: '小红书', type: 'bar', stack: 'total', data: dailyData.map(d => d.xiaohongshu), itemStyle: { color: '#ff6b9d' } },
+                    { name: '抖音', type: 'bar', stack: 'total', data: dailyData.map(d => d.douyin), itemStyle: { color: '#00d4ff' } }
+                ]
+            });
+        }
+
+        // 渲染平台分布图
+        function renderPlatformPieChart() {
+            const chart = echarts.init(document.getElementById('platformPieChart'));
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'item' },
+                legend: { bottom: 0, textStyle: { color: 'rgba(255, 255, 255, 0.6)' } },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    data: [
+                        { value: totalXhs, name: '小红书', itemStyle: { color: '#ff6b9d' } },
+                        { value: totalDy, name: '抖音', itemStyle: { color: '#00d4ff' } }
+                    ],
+                    label: { color: 'rgba(255, 255, 255, 0.8)' }
+                }]
+            });
+        }
+
+        // 渲染活动表格
+        function renderActivityTable() {
+            const container = document.getElementById('activityTable');
+            let html = '<table class="data-table"><thead><tr><th>排名</th><th>活动名称</th><th>小红书</th><th>抖音</th><th>总计</th><th>详情</th></tr></thead><tbody>';
+            
+            activities.sort((a, b) => b.total - a.total).forEach((a, i) => {
+                const rank = i < 3 ? ['🥇', '🥈', '🥉'][i] : (i + 1);
+                const hasExposure = activityExposure[a.name] && activityExposure[a.name].exposure;
+                html += `<tr>
+                    <td>${rank}</td>
+                    <td>${a.name}</td>
+                    <td><span class="badge badge-xiaohongshu">${a.xiaohongshu}</span></td>
+                    <td><span class="badge badge-douyin">${a.douyin}</span></td>
+                    <td><strong>${a.total}</strong></td>
+                    <td><button class="detail-btn" onclick="showActivityDetail('${a.name}')">📊</button></td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            html += '<div id="activityDetail" class="activity-detail"></div>';
+            container.innerHTML = html;
+        }
+        
+        // 显示活动详情
+        function showActivityDetail(activityName) {
+            const detailContainer = document.getElementById('activityDetail');
+            const activity = activities.find(a => a.name === activityName);
+            const exposure = activityExposure[activityName];
+            
+            if (!activity) return;
+            
+            let html = `
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <h3>${activityName}</h3>
+                        <button class="close-btn" onclick="closeActivityDetail()">✕</button>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-row">
+                            <span class="detail-label">小红书帖子：</span>
+                            <span class="detail-value">${activity.xiaohongshu} 篇</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">抖音帖子：</span>
+                            <span class="detail-value">${activity.douyin} 篇</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">UGC总计：</span>
+                            <span class="detail-value highlight">${activity.total} 篇</span>
+                        </div>
+            `;
+            
+            if (exposure) {
+                html += `
+                        <div class="detail-divider"></div>
+                        <div class="detail-row">
+                            <span class="detail-label">活动曝光：</span>
+                            <span class="detail-value highlight">${exposure.exposure ? exposure.exposure.toLocaleString() : '待更新'}</span>
+                        </div>
+                `;
+                if (exposure.note) {
+                    html += `
+                        <div class="detail-row">
+                            <span class="detail-label">数据来源：</span>
+                            <span class="detail-value note">${exposure.note}</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            detailContainer.innerHTML = html;
+        }
+        
+        // 关闭活动详情
+        function closeActivityDetail() {
+            document.getElementById('activityDetail').innerHTML = '';
+        }
+
+        // ==================== 自媒体数据 ====================
+        const platforms = {
+            '公众号': {
+                icon: '📱', color: '#25d366', badge: 'badge-wechat',
+                fans: { current: 18449328, change: 1958 },
+                exposure: { total: 371702, monthly: [81934, 128022, 69760, 26827, 11224, 52935] }
+            },
+            '视频号': {
+                icon: '🎬', color: '#ff4e4e', badge: 'badge-video',
+                fans: { current: 40640, change: 381 },
+                exposure: { total: 209796, monthly: [23878, 40547, 83321, 14665, 39438, 7947] }
+            },
+            '抖音': {
+                icon: '🎵', color: '#ffffff', badge: 'badge-douyin',
+                fans: { current: 17900, change: 64 },
+                exposure: { total: 161038, monthly: [3444, 80955, 56791, 1457, 17355, 1036] }
+            },
+            '小红书': {
+                icon: '📕', color: '#ff4757', badge: 'badge-xiaohongshu',
+                fans: { current: 6274, change: -3 },
+                exposure: { total: 106944, monthly: [3059, 55968, 40294, 3696, 3850, 77] }
+            },
+            '生活号': {
+                icon: '🏠', color: '#ffc107', badge: 'badge-life',
+                fans: { current: 436000, change: 634 },
+                exposure: { total: 2808339, monthly: [1255706, 405831, 996719, 1059, 148946, 78] }
+            },
+            '微博': {
+                icon: '📢', color: '#ff6b6b', badge: 'badge-weibo',
+                fans: { current: null, change: null },
+                exposure: { total: 41190, monthly: [4777, 4824, 7458, 3722, 20018, 391] }
+            },
+            '快手': {
+                icon: '⚡', color: '#ffaa00', badge: 'badge-kuaishou',
+                fans: { current: 34, change: -1 },
+                exposure: { total: 25980, monthly: [0, 0, 21606, 4009, 281, 84] }
+            }
+        };
+
+        const weeklyData = {
+            1: { name: '1月', weeks: { 'W1': 57155, 'W2': 17052, 'W3': 26724, 'W4': 1271867 } },
+            2: { name: '2月', weeks: { 'W1': 34250, 'W2': 195915, 'W3': 179421, 'W4': 306561 } },
+            3: { name: '3月', weeks: { 'W1': 1073129, 'W2': 86824, 'W3': 32831, 'W4': 83165 } },
+            4: { name: '4月', weeks: { 'W1': 18877, 'W2': 0, 'W3': 0, 'W4': 41018 } },
+            5: { name: '5月', weeks: { 'W1': 30550, 'W2': 201471, 'W3': 163107, 'W4': 25147 } },
+            6: { name: '6月', weeks: { 'W1': 13179, 'W2': 38880, 'W3': 0, 'W4': 0 } }
+        };
+
+        // 渲染平台概览
+        function renderPlatformOverview() {
+            const container = document.getElementById('platformOverview');
+            let html = '';
+            
+            const overviewOrder = ['公众号', '抖音', '小红书', '微博', '快手', '生活号', '视频号'];
+            overviewOrder.forEach((name, index) => {
+                const data = platforms[name];
+                const changeClass = data.fans.change >= 0 ? 'up' : 'down';
+                html += `
+                <div class="platform-card platform-card--${index}">
+                    <div class="platform-header">
+                        <div class="platform-icon" style="background: ${data.color}20; color: ${data.color};">${data.icon}</div>
+                        <div class="platform-name"><span class="badge ${data.badge}">${name}</span></div>
+                    </div>
+                    <div class="metric-row">
+                        <span class="label">当前粉丝</span>
+                        <span class="value">${data.fans.current ? data.fans.current.toLocaleString() : '-'}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="label">累计曝光</span>
+                        <span class="value">${data.exposure.total.toLocaleString()}</span>
+                    </div>
+                    ${data.fans.change !== null ? `
+                    <div class="metric-row">
+                        <span class="label">粉丝变化</span>
+                        <span class="value ${changeClass}">${data.fans.change >= 0 ? '+' : ''}${data.fans.change.toLocaleString()}</span>
+                    </div>
+                    ` : ''}
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 渲染曝光趋势图
+        function renderExposureChart() {
+            const chart = echarts.init(document.getElementById('exposureChart'));
+            const months = ['1月', '2月', '3月', '4月', '5月', '6月'];
+            const colors = ['#25d366', '#ff4e4e', '#ffffff', '#ff4757', '#ffc107', '#ff6b6b', '#ffaa00'];
+            const series = [];
+            
+            let i = 0;
+            for (const [name, data] of Object.entries(platforms)) {
+                series.push({
+                    name: name,
+                    type: 'line',
+                    data: data.exposure.monthly,
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 6,
+                    lineStyle: { width: 2, color: colors[i] },
+                    itemStyle: { color: colors[i] }
+                });
+                i++;
+            }
+            
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis', backgroundColor: 'rgba(30, 30, 40, 0.9)', borderColor: '#ff6b9d' },
+                legend: { bottom: 0, textStyle: { color: 'rgba(255, 255, 255, 0.6)' }, type: 'scroll' },
+                grid: { left: '3%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
+                xAxis: { type: 'category', data: months, axisLabel: { color: 'rgba(255, 255, 255, 0.6)' }, axisLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.1)' } } },
+                yAxis: { type: 'value', axisLabel: { color: 'rgba(255, 255, 255, 0.6)' }, splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.05)' } } },
+                series: series
+            });
+        }
+
+        // 渲染粉丝增长图
+        function renderFansChart() {
+            const chart = echarts.init(document.getElementById('fansChart'));
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis', backgroundColor: 'rgba(30, 30, 40, 0.9)' },
+                legend: { bottom: 0, textStyle: { color: 'rgba(255, 255, 255, 0.6)' } },
+                grid: { left: '3%', right: '4%', bottom: '15%', top: '5%', containLabel: true },
+                xAxis: { type: 'category', data: Object.keys(weeklyData).map(m => weeklyData[m].name), axisLabel: { color: 'rgba(255, 255, 255, 0.6)' } },
+                yAxis: { type: 'value', axisLabel: { color: 'rgba(255, 255, 255, 0.6)' } },
+                series: [{
+                    name: '周曝光量',
+                    type: 'bar',
+                    data: Object.keys(weeklyData).map(m => Object.values(weeklyData[m].weeks).reduce((a, b) => a + b, 0)),
+                    itemStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: '#ff6b9d' },
+                            { offset: 1, color: '#e056fd' }
+                        ])
+                    }
+                }]
+            });
+        }
+
+        // 渲染周度数据
+        function renderWeeklyStats() {
+            const container = document.getElementById('weeklyStats');
+            let html = '<table class="data-table"><thead><tr><th>月份</th><th>W1</th><th>W2</th><th>W3</th><th>W4</th><th>月度总计</th></tr></thead><tbody>';
+            
+            for (const [month, data] of Object.entries(weeklyData)) {
+                const weeks = Object.values(data.weeks);
+                const total = weeks.reduce((a, b) => a + b, 0);
+                html += `<tr>
+                    <td><strong>${data.name}</strong></td>
+                    <td>${weeks[0]?.toLocaleString() || 0}</td>
+                    <td>${weeks[1]?.toLocaleString() || 0}</td>
+                    <td>${weeks[2]?.toLocaleString() || 0}</td>
+                    <td>${weeks[3]?.toLocaleString() || 0}</td>
+                    <td><strong>${total.toLocaleString()}</strong></td>
+                </tr>`;
+            }
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // 初始化
+
+        // 渲染数据洞察与建议
+        function renderInsights() {
+            const container = document.getElementById('insightsContent');
+            
+            // 计算关键指标
+            const totalUGC = totalDaily + totalActivity;
+            const avgDaily = Math.round(totalDaily / dailyData.length);
+            const targetProgress = Math.round((totalUGC / 900) * 100);
+            const topActivity = activities[0];
+            const xhsRatio = Math.round((activityXhs / totalActivity) * 100);
+            const dyRatio = Math.round((activityDy / totalActivity) * 100);
+            
+            // 分析日均趋势
+            const recentDays = dailyData.slice(-7);
+            const recentAvg = Math.round(recentDays.reduce((s, d) => s + d.total, 0) / 7);
+            const prevDays = dailyData.slice(-14, -7);
+            const prevAvg = prevDays.length > 0 ? Math.round(prevDays.reduce((s, d) => s + d.total, 0) / 7) : recentAvg;
+            const dailyTrend = recentAvg > prevAvg ? 'up' : (recentAvg < prevAvg ? 'down' : 'stable');
+            
+            // 平台分析
+            const topPlatform = dyRatio > xhsRatio ? '抖音' : '小红书';
+            const topPlatformRatio = Math.max(dyRatio, xhsRatio);
+            
+            const html = `
+                <div class="insight-grid">
+                    <div class="insight-card">
+                        <div class="insight-icon">📊</div>
+                        <div class="insight-title">UGC产出分析</div>
+                        <div class="insight-content">
+                            <p>本月累计UGC <span class="insight-highlight">${totalUGC}</span> 条，其中日常 ${totalDaily} 条，活动 ${totalActivity} 条。</p>
+                            <p>日均产出 <span class="insight-highlight">${avgDaily}</span> 条，目标进度 <span class="insight-highlight">${targetProgress}%</span>。</p>
+                            <span class="trend-indicator trend-${dailyTrend}">
+                                ${dailyTrend === 'up' ? '↑ 近7日日均增长' : (dailyTrend === 'down' ? '↓ 近7日日均下降' : '→ 日均保持稳定')}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-icon">🏆</div>
+                        <div class="insight-title">活动表现TOP1</div>
+                        <div class="insight-content">
+                            <p><span class="insight-highlight">${topActivity.name}</span> 以 ${topActivity.total} 条UGC领跑，</p>
+                            <p>占总活动UGC的 <span class="insight-highlight">${Math.round(topActivity.total / totalActivity * 100)}%</span>。</p>
+                            <p style="margin-top: 8px; color: rgba(255,255,255,0.5);">建议：持续深耕该活动方向，可考虑延展或复制成功模式。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-icon">📱</div>
+                        <div class="insight-title">平台分布特征</div>
+                        <div class="insight-content">
+                            <p>抖音占比 <span class="insight-highlight">${dyRatio}%</span>，小红书占比 <span class="insight-highlight">${xhsRatio}%</span>。</p>
+                            <p><span class="insight-highlight">${topPlatform}</span> 是当前主要UGC来源平台。</p>
+                            ${xhsRatio < 30 ? '<p style="margin-top: 8px; color: #ffc107;">⚠️ 小红书占比较低，建议增加小红书活动投放。</p>' : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-icon">💡</div>
+                        <div class="insight-title">运营建议</div>
+                        <div class="insight-content">
+                            <ul class="recommendation-list">
+                                <li>日均可增加 <span class="insight-highlight">${Math.max(0, 30 - avgDaily)}</span> 条以达到月度目标</li>
+                                <li>抖音内容产出强劲，可加大视频类活动投入</li>
+                                ${xhsRatio < 30 ? '<li>建议策划小红书专属活动提升占比</li>' : '<li>小红书表现良好，继续保持图文内容质量</li>'}
+                                <li>关注"花小猪递铲子"等头部活动的成功经验</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-icon">📈</div>
+                        <div class="insight-title">自媒体数据洞察</div>
+                        <div class="insight-content">
+                            <p>公众号粉丝 <span class="insight-highlight">${(platforms['公众号'].fans.current/10000).toFixed(1)}万</span>，月增长 +${platforms['公众号'].fans.change}</p>
+                            <p>生活号粉丝 <span class="insight-highlight">${(platforms['生活号'].fans.current/10000).toFixed(1)}万</span>，月增长 +${platforms['生活号'].fans.change}</p>
+                            <p style="margin-top: 8px; color: rgba(255,255,255,0.5);">总曝光量达 <span class="insight-highlight">${(Object.values(platforms).reduce((s,p) => s + p.exposure.total, 0)/10000).toFixed(1)}万</span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="insight-card">
+                        <div class="insight-icon">🎯</div>
+                        <div class="insight-title">下阶段重点</div>
+                        <div class="insight-content">
+                            <ul class="recommendation-list">
+                                <li>持续监测日均UGC产出，确保达标</li>
+                                <li>优化活动内容质量，提升转化效果</li>
+                                <li>平衡各平台内容分布</li>
+                                <li>关注用户互动反馈，迭代内容策略</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function init() {
+            // UGC看板
+            renderUGCMetrics();
+            renderPrMetrics();
+            renderMonthlyComparison();
+            renderDailyChart();
+            renderPlatformPieChart();
+            renderActivityTable();
+            
+            // 自媒体看板
+            renderPlatformOverview();
+            renderWeeklyStats();
+            
+            // 数据洞察
+            renderInsights();
+        }
+
+        init();
+    </script>
+</body>
+</html>
