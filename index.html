@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>花小猪运营数据综合看板</title>
+    <title>花小猪新媒体运营数据看板</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -553,25 +553,21 @@
         <div id="tab-ugc" class="tab-content active">
             <!-- 关键指标 -->
             <div class="card">
-                <div class="card-title" id="ugc-metrics">📊 关键指标总览</div>
+                <div class="card-title" id="ugc-metrics">关键指标</div>
                 <div class="metrics-grid" id="ugcMetrics"></div>
             </div>
 
-            <!-- PR统计 -->
-            <div class="card">
-                <div class="card-title" id="pr-metrics">📋 2026年统计数据</div>
-                <div class="metrics-grid pr-metrics-grid" id="prMetrics"></div>
-            </div>
+
 
             <!-- 月度对比 -->
             <div class="card">
-                <div class="card-title" id="ugc-comparison">📈 月度对比分析</div>
+                <div class="card-title" id="ugc-comparison">月度对比</div>
                 <div class="metrics-grid" id="monthlyComparison" style="grid-template-columns: repeat(4, 1fr);"></div>
             </div>
 
             <!-- 每日趋势 -->
             <div class="card">
-                <div class="card-title" id="ugc-daily">📉 每日UGC趋势</div>
+                <div class="card-title" id="ugc-daily">每日趋势</div>
                 <div class="chart-row">
                     <div class="chart-box">
                         <div class="chart-title">每日UGC数量</div>
@@ -586,7 +582,7 @@
 
             <!-- 活动数据 -->
             <div class="card">
-                <div class="card-title" id="ugc-activity">🎯 活动UGC排行</div>
+                <div class="card-title" id="ugc-activity">活动排行</div>
                 <div id="activityTable"></div>
             </div>
 
@@ -597,13 +593,13 @@
         <div id="tab-media" class="tab-content">
             <!-- 平台概览 -->
             <div class="card">
-                <div class="card-title" id="media-overview">📱 全平台数据总览</div>
+                <div class="card-title" id="media-overview">平台总览</div>
                 <div class="platform-grid" id="platformOverview"></div>
             </div>
 
             <!-- 曝光趋势 -->
             <div class="card">
-                <div class="card-title" id="media-exposure">📊 月度曝光趋势</div>
+                <div class="card-title" id="media-exposure">曝光趋势</div>
                 <div class="chart-row">
                     <div class="chart-box">
                         <div class="chart-title">各平台曝光量对比</div>
@@ -618,7 +614,7 @@
 
             <!-- 周度数据 -->
             <div class="card">
-                <div class="card-title" id="media-weekly">📅 周度数据统计</div>
+                <div class="card-title" id="media-weekly">周度统计</div>
                 <div id="weeklyStats"></div>
             </div>
 
@@ -628,7 +624,7 @@
     <div class="insights-section">
         <div class="container">
             <div class="card">
-                <div class="card-title" id="insights">💡 数据洞察与建议</div>
+                <div class="card-title" id="insights">数据洞察与建议</div>
                 <div id="insightsContent"></div>
             </div>
         </div>
@@ -682,6 +678,49 @@
         }
         .activity-detail {
             margin-top: 20px;
+        }
+
+        /* 可点击卡片样式 */
+        .metric-card.clickable {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .metric-card.clickable:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 107, 157, 0.3);
+            border-color: rgba(255, 107, 157, 0.5);
+        }
+        
+        /* 年度明细样式 */
+        .annual-detail {
+            grid-column: span 3;
+            margin-top: 15px;
+        }
+        .annual-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .annual-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .annual-month {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+        .annual-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #e056fd;
+        }
+        .annual-note {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 5px;
         }
         .detail-card {
             background: linear-gradient(135deg, rgba(30, 30, 50, 0.95), rgba(20, 20, 40, 0.95));
@@ -1014,18 +1053,18 @@
         .chart-box { padding: 18px; }
         .chart-title { color: #cbd7ea; }
         .platform-grid {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(12, minmax(0, 1fr));
             grid-template-rows: repeat(2, auto);
             grid-auto-flow: row;
-            gap: 14px;
+            gap: 16px;
         }
-        .platform-card--0 { grid-area: 1 / 1 / 2 / 2; }
-        .platform-card--1 { grid-area: 1 / 2 / 2 / 3; }
-        .platform-card--2 { grid-area: 1 / 3 / 2 / 4; }
-        .platform-card--3 { grid-area: 2 / 1 / 3 / 2; }
-        .platform-card--4 { grid-area: 2 / 2 / 3 / 3; }
-        .platform-card--5 { grid-area: 2 / 3 / 3 / 4; }
-        .platform-card--6 { grid-area: 2 / 4 / 3 / 5; }
+        .platform-card--0 { grid-area: 1 / 1 / 2 / 5; }
+        .platform-card--1 { grid-area: 1 / 5 / 2 / 9; }
+        .platform-card--2 { grid-area: 1 / 9 / 2 / 13; }
+        .platform-card--3 { grid-area: 2 / 1 / 3 / 4; }
+        .platform-card--4 { grid-area: 2 / 4 / 3 / 7; }
+        .platform-card--5 { grid-area: 2 / 7 / 3 / 10; }
+        .platform-card--6 { grid-area: 2 / 10 / 3 / 13; }
         .platform-card:hover { border-color: rgba(169, 139, 255, 0.42); box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16); }
         .metric-row .label { color: #8e9eb5; }
         .metric-row .value { color: #c4b5fd; }
@@ -1042,6 +1081,49 @@
         /* 活动详情样式 */
         .activity-detail {
             margin-top: 20px;
+        }
+
+        /* 可点击卡片样式 */
+        .metric-card.clickable {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .metric-card.clickable:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 107, 157, 0.3);
+            border-color: rgba(255, 107, 157, 0.5);
+        }
+        
+        /* 年度明细样式 */
+        .annual-detail {
+            grid-column: span 3;
+            margin-top: 15px;
+        }
+        .annual-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .annual-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .annual-month {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+        .annual-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #e056fd;
+        }
+        .annual-note {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 5px;
         }
         .detail-card {
             background: linear-gradient(135deg, rgba(30, 30, 50, 0.95), rgba(20, 20, 40, 0.95));
@@ -1130,6 +1212,7 @@
         @media (max-width: 1180px) {
             .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .pr-metrics-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .main-content { padding: 28px 28px 44px; }
         }
         @media (max-width: 900px) {
             .sidebar { width: 224px; }
@@ -1141,9 +1224,9 @@
         @media (max-width: 680px) {
             .sidebar { transform: translateX(-184px); }
             .sidebar.collapsed { transform: translateX(-184px); }
-            .main-content, .main-content.expanded { margin-left: 40px; padding: 16px; }
+            .main-content, .main-content.expanded { margin-left: 40px; padding: 18px 16px 32px; }
             .header { padding: 24px 20px; }
-            .card, .insights-section .card { padding: 18px; }
+            .card, .insights-section .card { padding: 20px; margin-bottom: 16px; }
             .metrics-grid, .chart-row, .platform-grid { grid-template-columns: 1fr; }
             .platform-grid { grid-template-rows: none; grid-auto-flow: row; }
             .pr-metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1152,6 +1235,104 @@
             .data-table { display: block; overflow-x: auto; white-space: nowrap; }
             .ugc-section { margin-top: 92px; }
             .sidebar-mascot { width: 104px; top: -88px; }
+        }
+
+        /* ===== Final polish: tighter visual rhythm & richer interaction states ===== */
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .main-content > * { max-width: 1480px; margin-left: auto; margin-right: auto; }
+        .main-content { padding: 34px 42px 56px; }
+        .header {
+            min-height: 132px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-radius: 20px;
+        }
+        .header h1 { display: inline-block; width: fit-content; margin-bottom: 8px; }
+        .header-info { font-size: 13px; letter-spacing: 0.015em; }
+        .tabs {
+            width: fit-content;
+            padding: 5px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(8, 15, 29, 0.46);
+            backdrop-filter: blur(12px);
+        }
+        .tab-btn { border-color: transparent; }
+        .tab-btn:not(.active):hover { transform: translateY(-1px); }
+        .tab-btn.active { box-shadow: 0 7px 18px rgba(224, 86, 253, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+        .card, .insights-section .card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+        }
+        .card::after {
+            content: "";
+            position: absolute;
+            width: 220px;
+            height: 140px;
+            top: -105px;
+            right: -100px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse, rgba(255, 117, 151, 0.12), transparent 68%);
+            pointer-events: none;
+        }
+        .card-title { position: relative; z-index: 1; gap: 12px; letter-spacing: 0.015em; }
+        .card-title::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #ff7fa5, #aa88ff);
+            box-shadow: 0 0 12px rgba(255, 117, 151, 0.48);
+        }
+        .metrics-grid { gap: 16px; }
+        .metric-card {
+            min-height: 148px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-radius: 14px;
+        }
+        .metric-value { line-height: 1.05; letter-spacing: -0.03em; }
+        .metric-label { margin-top: 9px; font-weight: 500; }
+        .metric-change { margin-top: 7px; }
+        .chart-row { gap: 18px; }
+        .chart-box {
+            border-radius: 14px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+            transition: border-color 0.25s ease, transform 0.25s ease;
+        }
+        .chart-box:hover { transform: translateY(-2px); border-color: rgba(255, 154, 179, 0.28); }
+        .chart-title { display: flex; align-items: center; gap: 8px; }
+        .chart-title::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #ff789e; box-shadow: 0 0 0 4px rgba(255, 120, 158, 0.12); }
+        .platform-card { border-radius: 14px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025); }
+        .platform-card { padding: 20px; }
+        .platform-card:hover { transform: translateY(-4px); }
+        .platform-icon { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18); }
+        .metric-row { padding: 7px 0; margin: 0; border-top: 1px solid rgba(255, 255, 255, 0.045); }
+        .metric-row:first-of-type { border-top: 0; }
+        .data-table { border-radius: 12px; overflow: hidden; }
+        .data-table th { height: 46px; letter-spacing: 0.02em; }
+        .data-table td { transition: background 0.2s ease; }
+        .data-table tr { transition: background 0.2s ease, transform 0.2s ease; }
+        #activityTable .data-table tr:not(:first-child) { cursor: pointer; }
+        #activityTable .data-table tr:not(:first-child):hover { background: rgba(255, 117, 151, 0.08); }
+        .insight-card { border-radius: 14px; transition: transform 0.25s ease, border-color 0.25s ease; }
+        .insight-card:hover { transform: translateY(-3px); border-color: rgba(255, 166, 187, 0.4); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 117, 151, 0.32); border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 117, 151, 0.58); }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
         }
     </style>
 
@@ -1356,22 +1537,61 @@
             const weekEnd = dailyData[dailyData.length - 1].date;
             
             container.innerHTML = `
-                <div class="metric-card">
+                <div class="metric-card clickable" onclick="showAnnualDetail('manual')">
                     <div class="metric-value">2,360</div>
                     <div class="metric-label">2026年UGC手扒总计</div>
-                    <div class="metric-change up">全年累计</div>
+                    <div class="metric-change up">全年累计 · 点击查看明细</div>
                 </div>
-                <div class="metric-card">
+                <div class="metric-card clickable" onclick="showAnnualDetail('pr')">
                     <div class="metric-value">11,542</div>
                     <div class="metric-label">2026年UGC PR总计</div>
-                    <div class="metric-change up">全年累计</div>
+                    <div class="metric-change up">全年累计 · 点击查看明细</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value">${weeklyUgc.toLocaleString()}</div>
                     <div class="metric-label">本周UGC总计</div>
                     <div class="metric-change up">统计周期：${weekStart}-${weekEnd}</div>
                 </div>
+                <div id="annualDetail" class="annual-detail"></div>
             `;
+        }
+        
+        // 显示年度明细
+        function showAnnualDetail(type) {
+            const container = document.getElementById('annualDetail');
+            const title = type === 'manual' ? '2026年手扒数据明细' : '2026年PR数据明细';
+            
+            let html = `
+                <div class="detail-card">
+                    <div class="detail-header">
+                        <h3>${title}</h3>
+                        <button class="close-btn" onclick="closeAnnualDetail()">✕</button>
+                    </div>
+                    <div class="detail-content annual-grid">
+            `;
+            
+            annualStatsData.forEach(data => {
+                const value = type === 'manual' ? data.manual : data.pr;
+                html += `
+                    <div class="annual-item">
+                        <div class="annual-month">${data.month}</div>
+                        <div class="annual-value">${value === null ? '—' : value.toLocaleString()}</div>
+                        ${data.note ? `<div class="annual-note">${data.note}</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        // 关闭年度明细
+        function closeAnnualDetail() {
+            document.getElementById('annualDetail').innerHTML = '';
         }
 
         function renderPrMetrics() {
@@ -1801,7 +2021,7 @@
         function init() {
             // UGC看板
             renderUGCMetrics();
-            renderPrMetrics();
+            
             renderMonthlyComparison();
             renderDailyChart();
             renderPlatformPieChart();
